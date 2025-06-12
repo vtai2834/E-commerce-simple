@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # MongoDB Databases
+  user-db:
+    image: mongo:7
+    container_name: user-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: user_db
+    volumes:
+      - user_data:/data/db
+    networks:
+      - microservices
+
+  product-db:
+    image: mongo:7
+    container_name: product-mongodb
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: product_db
+    volumes:
+      - product_data:/data/db
+    networks:
+      - microservices
+
+  order-db:
+    image: mongo:7
+    container_name: order-mongodb
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_DATABASE: order_db
+    volumes:
+      - order_data:/data/db
+    networks:
+      - microservices
+
+  # User Service
+  user-service:
+    build:
+      context: ../BE/user_service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8080:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://user-db:27017/user_db
+      - JWT_SECRET=your-super-secret-jwt-key
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      - user-db
+    networks:
+      - microservices
+    restart: unless-stopped
+
+  # Product Service
+  product-service:
+    build:
+      context: ../BE/product_service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8081:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://product-db:27017/product_db
+    depends_on:
+      - product-db
+    networks:
+      - microservices
+    restart: unless-stopped
+
+  # Order Service
+  order-service:
+    build:
+      context: ../BE/order_service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8082:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://order-db:27017/order_db
+      - USER_SERVICE_URL=http://user-service:3000
+      - PRODUCT_SERVICE_URL=http://product-service:3000
+    depends_on:
+      - order-db
+      - user-service
+      - product-service
+    networks:
+      - microservices
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ../FE
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+    networks:
+      - microservices
+    restart: unless-stopped
+
+volumes:
+  user_data:
+  product_data:
+  order_data:
+
+networks:
+  microservices:
+    driver: bridge
