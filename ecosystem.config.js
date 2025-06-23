@@ -5,17 +5,17 @@ module.exports = {
     {
       name: "user-service",
       script: "dist/main.js",
-      cwd: "./BE/user_service",
+      cwd: "./user_service",
     },
     {
       name: "product-service",
       script: "dist/main.js",
-      cwd: "./BE/product_service",
+      cwd: "./product_service",
     },
     {
       name: "order-service",
       script: "dist/main.js",
-      cwd: "./BE/order_service",
+      cwd: "./order_service",
     },
     {
       name: "api-gateway",
