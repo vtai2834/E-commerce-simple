@@ -29,7 +29,7 @@ services:
 
   user-service:
     build:
-      context: ./BE/user_service
+      context: ./user_service
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -44,7 +44,7 @@ services:
 
   product-service:
     build:
-      context: ./BE/product_service
+      context: ./product_service
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
@@ -57,7 +57,7 @@ services:
 
   order-service:
     build:
-      context: ./BE/order_service
+      context: ./order_service
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
