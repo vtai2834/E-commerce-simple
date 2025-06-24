@@ -28,3 +28,17 @@ spec:
               key: JWT_SECRET
         - name: JWT_EXPIRES_IN
           value: "24h"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: ecommerce
+spec:
+  type: ClusterIP
+  selector:
+    app: user-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+
