@@ -16,7 +16,7 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forRoot('mongodb://localhost:27019/order-service'),
+            mongoose_1.MongooseModule.forRoot('mongodb://localhost:27017/order_db'),
             orders_module_1.OrdersModule
         ],
     })

@@ -4,7 +4,7 @@ import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://mongodb:27017/order_db'),
+    MongooseModule.forRoot('mongodb://localhost:27017/order_db'),
     OrdersModule
   ],
 })

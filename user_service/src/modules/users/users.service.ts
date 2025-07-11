@@ -25,6 +25,7 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     return {
+      _id: user._id,
       email: user.email,
       fullName: user.fullName,
       password: user.password,

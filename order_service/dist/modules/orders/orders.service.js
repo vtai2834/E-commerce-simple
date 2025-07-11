@@ -57,7 +57,7 @@ let OrderService = class OrderService {
             console.log('Starting order creation for user:', createOrderDto.userEmail);
             const userResponse = await retryOperation(async () => {
                 console.log('Verifying user existence...');
-                const response = await axiosWithTimeout.get(`http://localhost:8080/users/email/${createOrderDto.userEmail}`);
+                const response = await axiosWithTimeout.get(`${process.env.USER_SERVICE_URL}/users/email/${createOrderDto.userEmail}`);
                 console.log('User verification response:', response.status);
                 return response;
             });
@@ -68,7 +68,7 @@ let OrderService = class OrderService {
             const items = await Promise.all(createOrderDto.items.map(async (item) => {
                 const productResponse = await retryOperation(async () => {
                     console.log('Checking product:', item.productId);
-                    return await axiosWithTimeout.get(`http://localhost:8081/products/${item.productId}`);
+                    return await axiosWithTimeout.get(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`);
                 });
                 if (!productResponse.data) {
                     throw new common_1.NotFoundException(`Product ${item.productId} not found`);
@@ -99,7 +99,7 @@ let OrderService = class OrderService {
                 const newStock = item.currentStock - item.quantity;
                 await retryOperation(async () => {
                     console.log('Updating stock for product:', item.productId);
-                    return await axiosWithTimeout.patch(`http://localhost:8081/products/${item.productId}`, {
+                    return await axiosWithTimeout.patch(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`, {
                         stock: newStock
                     });
                 });
@@ -132,7 +132,7 @@ let OrderService = class OrderService {
         }
         if (updateOrderDto.items) {
             const items = await Promise.all(updateOrderDto.items.map(async (item) => {
-                const productResponse = await axios_1.default.get(`http://localhost:8081/products/${item.productId}`);
+                const productResponse = await axios_1.default.get(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`);
                 if (!productResponse.data) {
                     throw new common_1.NotFoundException(`Product ${item.productId} not found`);
                 }
