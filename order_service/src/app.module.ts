@@ -8,4 +8,4 @@ import { OrdersModule } from './modules/orders/orders.module';
     OrdersModule
   ],
 })
-export class AppModule {} 
+export class AppModule {}
