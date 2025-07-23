@@ -57,6 +57,10 @@ let Order = class Order {
 };
 exports.Order = Order;
 __decorate([
+    (0, mongoose_1.Prop)({ required: true, unique: true, _id: true }),
+    __metadata("design:type", String)
+], Order.prototype, "_id", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], Order.prototype, "userId", void 0);

@@ -36,6 +36,9 @@ export const OrderProductInfoSchema = SchemaFactory.createForClass(OrderProductI
 
 @Schema({ timestamps: true })
 export class Order {
+  @Prop({ required: true, unique: true, _id: true})
+  _id: string;
+  
   @Prop({ required: true })
   userId: string;
 

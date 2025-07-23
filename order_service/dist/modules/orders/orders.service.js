@@ -11,23 +11,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const order_schema_1 = require("./schemas/order.schema");
+const order_repository_1 = require("./event_sourcing/repositories/order.repository");
+const order_projection_1 = require("./event_sourcing/projection/order.projection");
+const order_aggregate_1 = require("./event_sourcing/aggregate/order.aggregate");
+const uuid_1 = require("uuid");
 const axios_1 = require("axios");
 const axiosWithTimeout = axios_1.default.create({
     timeout: 5000
@@ -49,26 +42,31 @@ async function retryOperation(operation, maxRetries = 3) {
     throw lastError;
 }
 let OrderService = class OrderService {
-    constructor(orderModel) {
+    constructor(orderModel, orderRepository, orderProjection) {
         this.orderModel = orderModel;
+        this.orderRepository = orderRepository;
+        this.orderProjection = orderProjection;
     }
     async create(createOrderDto) {
         try {
-            console.log('Starting order creation for user:', createOrderDto.userEmail);
+            const { userId, userEmail, items: orderItems } = createOrderDto;
+            console.log('[Order Service] Starting order creation for user:', userEmail);
             const userResponse = await retryOperation(async () => {
-                console.log('Verifying user existence...');
-                const response = await axiosWithTimeout.get(`${process.env.USER_SERVICE_URL}/users/email/${createOrderDto.userEmail}`);
-                console.log('User verification response:', response.status);
+                console.log('[Order Service] Verifying user existence...');
+                const host = process.env.USER_SERVICE_URL || 'http://localhost:8080';
+                const response = await axiosWithTimeout.get(`${host}/users/email/${createOrderDto.userEmail}`);
+                console.log('[Order Service] User verification response:', response.status);
                 return response;
             });
             if (!userResponse.data) {
                 throw new common_1.NotFoundException('User not found');
             }
-            console.log('Verifying products and stock...');
-            const items = await Promise.all(createOrderDto.items.map(async (item) => {
+            console.log('[Order Service] Verifying products and stock...');
+            const checkedItems = await Promise.all(orderItems.map(async (item) => {
                 const productResponse = await retryOperation(async () => {
-                    console.log('Checking product:', item.productId);
-                    return await axiosWithTimeout.get(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`);
+                    console.log('[Order Service] Checking product:', item.productId);
+                    const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+                    return await axiosWithTimeout.get(`${host}/products/${item.productId}`);
                 });
                 if (!productResponse.data) {
                     throw new common_1.NotFoundException(`Product ${item.productId} not found`);
@@ -85,30 +83,33 @@ let OrderService = class OrderService {
                     currentStock: product.stock
                 };
             }));
-            const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            console.log('Total order amount:', totalAmount);
-            const order = new this.orderModel(Object.assign(Object.assign({}, createOrderDto), { items: items.map((_a) => {
-                    var { currentStock } = _a, item = __rest(_a, ["currentStock"]);
-                    return item;
-                }), totalAmount, status: 'pending' }));
-            console.log('Saving order...');
-            const savedOrder = await order.save();
-            console.log('Order saved successfully');
-            console.log('Updating product stocks...');
-            await Promise.all(items.map(async (item) => {
+            const totalAmount = checkedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            console.log('[Order Service] Total order amount:', totalAmount);
+            const orderId = (0, uuid_1.v4)();
+            const orderAggregate = new order_aggregate_1.OrderAggregate(orderId);
+            orderAggregate.create(userId, userEmail, checkedItems, totalAmount);
+            console.log('[Order Service] Saving order...');
+            for (const event of orderAggregate.uncommittedEvents) {
+                await this.orderProjection.handleEvent(event);
+            }
+            const savedOrder = await this.orderRepository.save(orderAggregate);
+            console.log('[Order Service] Order saved successfully');
+            console.log('[Order Service] Updating product stocks...');
+            await Promise.all(checkedItems.map(async (item) => {
                 const newStock = item.currentStock - item.quantity;
                 await retryOperation(async () => {
                     console.log('Updating stock for product:', item.productId);
-                    return await axiosWithTimeout.patch(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`, {
+                    const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+                    return await axiosWithTimeout.patch(`${host}/products/${item.productId}`, {
                         stock: newStock
                     });
                 });
             }));
-            console.log('All product stocks updated successfully');
+            console.log('[Order Service] All product stocks updated successfully');
             return savedOrder;
         }
         catch (error) {
-            console.error('Error in order creation:', error);
+            console.error('[Order Service] Error in order creation:', error);
             throw error;
         }
     }
@@ -126,44 +127,74 @@ let OrderService = class OrderService {
         return this.orderModel.find({ userId }).exec();
     }
     async update(id, updateOrderDto) {
-        const existingOrder = await this.orderModel.findById(id).exec();
-        if (!existingOrder) {
-            throw new common_1.NotFoundException(`Order ${id} not found`);
+        const { userId, userEmail, items: orderItems } = updateOrderDto;
+        const order = await this.orderProjection.findById(id);
+        if (!order) {
+            throw new common_1.NotFoundException(`Cannot find the order with id ${id}`);
         }
-        if (updateOrderDto.items) {
-            const items = await Promise.all(updateOrderDto.items.map(async (item) => {
-                const productResponse = await axios_1.default.get(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`);
-                if (!productResponse.data) {
-                    throw new common_1.NotFoundException(`Product ${item.productId} not found`);
-                }
-                const product = productResponse.data;
-                return {
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    price: product.price,
-                    name: product.name
-                };
-            }));
-            const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            updateOrderDto['totalAmount'] = totalAmount;
-            updateOrderDto['items'] = items;
+        const orderAggregate = await this.orderRepository.getById(id);
+        if (!orderAggregate) {
+            throw new common_1.NotFoundException('Order not found');
         }
-        const updatedOrder = await this.orderModel
-            .findByIdAndUpdate(id, updateOrderDto, { new: true })
-            .exec();
-        return updatedOrder;
+        const checkedItems = await Promise.all(orderItems.map(async (item) => {
+            const productResponse = await retryOperation(async () => {
+                const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+                return await axiosWithTimeout.get(`${host}/products/${item.productId}`);
+            });
+            if (!productResponse.data) {
+                throw new common_1.NotFoundException(`Product ${item.productId} not found`);
+            }
+            const product = productResponse.data;
+            if (product.stock < item.quantity) {
+                throw new common_1.BadRequestException(`Not enough stock for product ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+            }
+            return {
+                productId: item.productId,
+                quantity: item.quantity,
+                price: product.price,
+                name: product.name,
+                currentStock: product.stock
+            };
+        }));
+        const totalAmount = checkedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        updateOrderDto['totalAmount'] = totalAmount;
+        updateOrderDto['items'] = checkedItems;
+        orderAggregate.update(userId, userEmail, orderItems, totalAmount);
+        for (const event of orderAggregate.uncommittedEvents) {
+            await this.orderProjection.handleEvent(event);
+        }
+        await this.orderRepository.save(orderAggregate);
+        const orderState = orderAggregate.state;
+        return {
+            message: 'Order updated successfully',
+            order: {
+                id: orderState.id,
+                userId: orderState.userId,
+                userEmail: orderState.userEmail,
+                items: orderState.items,
+                totalAmount: orderState.totalAmount,
+            },
+        };
     }
     async remove(id) {
-        const result = await this.orderModel.deleteOne({ _id: id }).exec();
-        if (result.deletedCount === 0) {
-            throw new common_1.NotFoundException(`Order ${id} not found`);
+        const orderAggregate = await this.orderRepository.getById(id);
+        if (!orderAggregate) {
+            throw new common_1.NotFoundException('Order not found');
         }
+        orderAggregate.delete(id);
+        for (const event of orderAggregate.uncommittedEvents) {
+            await this.orderProjection.handleEvent(event);
+        }
+        await this.orderRepository.save(orderAggregate);
+        return { message: 'Order deleted successfully' };
     }
 };
 exports.OrderService = OrderService;
 exports.OrderService = OrderService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(order_schema_1.Order.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        order_repository_1.OrderEventRepository,
+        order_projection_1.OrderProjection])
 ], OrderService);
 //# sourceMappingURL=orders.service.js.map
