@@ -8,27 +8,67 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+  async create(@Body() createProductDto: CreateProductDto) {
+    console.log('[Product service] Product creating request received:', createProductDto.name);
+    try {
+      const result = await this.productService.create(createProductDto);
+      console.log('[Product Service] Create product successful for:', createProductDto.name);
+      return result;
+    } catch (error) {
+      console.error('[Product Service] Create product failed for:', createProductDto.name);
+      throw error;
+    }
   }
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  async findAll() {
+    console.log('[Product service] All product finding request received');
+    try {
+      const result = await this.productService.findAll();
+      console.log('[Product service] Find all products successful');
+      return result;
+    } catch (error) {
+      console.error('[Product service] Find all products failed' );
+      throw error;
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    console.log('[Proudct service] Product finding request received for id:', id);
+    try {
+      const result = this.productService.findOne(id);
+      console.log('[Product service] Product finding successful for id:', id);
+      return result;
+    } catch (error) {
+      console.error('[Product service] Product finding failed for id:', id);
+      throw error;
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(id, updateProductDto);
+  async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+    console.log('[Product service] Product updating request received for:', updateProductDto.name);
+    try {
+      const result = this.productService.update(id, updateProductDto);
+      console.log('[Product service] Product updating successful for:', updateProductDto.name);
+      return result;
+    } catch (error) {
+      console.error('[Product service] Product updating failed for:', updateProductDto.name);
+      throw error;
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(id);
+  async remove(@Param('id') id: string) {
+    console.log('[Product service] Product deleting request received for id:', id);
+    try {
+      const result = this.productService.remove(id);
+      console.log('[Product service] Product deleting successful for id:', id);
+      return result;
+    } catch (error) {
+      console.error('[Product service] Product deleting failed for id:', id);
+      throw error;
+    }
   }
 } 

@@ -15,6 +15,10 @@ let Product = class Product {
 };
 exports.Product = Product;
 __decorate([
+    (0, mongoose_1.Prop)({ required: true, unique: true, _id: true }),
+    __metadata("design:type", String)
+], Product.prototype, "_id", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], Product.prototype, "name", void 0);

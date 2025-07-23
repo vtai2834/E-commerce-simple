@@ -21,20 +21,65 @@ let ProductController = class ProductController {
     constructor(productService) {
         this.productService = productService;
     }
-    create(createProductDto) {
-        return this.productService.create(createProductDto);
+    async create(createProductDto) {
+        console.log('[Product service] Product creating request received:', createProductDto.name);
+        try {
+            const result = await this.productService.create(createProductDto);
+            console.log('[Product Service] Create product successful for:', createProductDto.name);
+            return result;
+        }
+        catch (error) {
+            console.error('[Product Service] Create product failed for:', createProductDto.name);
+            throw error;
+        }
     }
-    findAll() {
-        return this.productService.findAll();
+    async findAll() {
+        console.log('[Product service] All product finding request received');
+        try {
+            const result = await this.productService.findAll();
+            console.log('[Product service] Find all products successful');
+            return result;
+        }
+        catch (error) {
+            console.error('[Product service] Find all products failed');
+            throw error;
+        }
     }
-    findOne(id) {
-        return this.productService.findOne(id);
+    async findOne(id) {
+        console.log('[Proudct service] Product finding request received for id:', id);
+        try {
+            const result = this.productService.findOne(id);
+            console.log('[Product service] Product finding successful for id:', id);
+            return result;
+        }
+        catch (error) {
+            console.error('[Product service] Product finding failed for id:', id);
+            throw error;
+        }
     }
-    update(id, updateProductDto) {
-        return this.productService.update(id, updateProductDto);
+    async update(id, updateProductDto) {
+        console.log('[Product service] Product updating request received for:', updateProductDto.name);
+        try {
+            const result = this.productService.update(id, updateProductDto);
+            console.log('[Product service] Product updating successful for:', updateProductDto.name);
+            return result;
+        }
+        catch (error) {
+            console.error('[Product service] Product updating failed for:', updateProductDto.name);
+            throw error;
+        }
     }
-    remove(id) {
-        return this.productService.remove(id);
+    async remove(id) {
+        console.log('[Product service] Product deleting request received for id:', id);
+        try {
+            const result = this.productService.remove(id);
+            console.log('[Product service] Product deleting successful for id:', id);
+            return result;
+        }
+        catch (error) {
+            console.error('[Product service] Product deleting failed for id:', id);
+            throw error;
+        }
     }
 };
 exports.ProductController = ProductController;
@@ -43,20 +88,20 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_product_dto_1.CreateProductDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ProductController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ProductController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ProductController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
@@ -64,14 +109,14 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_product_dto_1.UpdateProductDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ProductController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], ProductController.prototype, "remove", null);
 exports.ProductController = ProductController = __decorate([
     (0, common_1.Controller)('products'),
