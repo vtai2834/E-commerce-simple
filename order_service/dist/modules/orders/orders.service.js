@@ -52,10 +52,12 @@ let OrderService = class OrderService {
             const { userId, userEmail, items: orderItems } = createOrderDto;
             console.log('[Order Service] Starting order creation for user:', userEmail);
             const userResponse = await retryOperation(async () => {
+
                 console.log('[Order Service] Verifying user existence...');
                 const host = process.env.USER_SERVICE_URL || 'http://localhost:8080';
                 const response = await axiosWithTimeout.get(`${host}/users/email/${createOrderDto.userEmail}`);
                 console.log('[Order Service] User verification response:', response.status);
+
                 return response;
             });
             if (!userResponse.data) {
@@ -64,7 +66,9 @@ let OrderService = class OrderService {
             console.log('[Order Service] Verifying products and stock...');
             const checkedItems = await Promise.all(orderItems.map(async (item) => {
                 const productResponse = await retryOperation(async () => {
+
                     console.log('[Order Service] Checking product:', item.productId);
+
                     const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
                     return await axiosWithTimeout.get(`${host}/products/${item.productId}`);
                 });
@@ -132,6 +136,7 @@ let OrderService = class OrderService {
         if (!order) {
             throw new common_1.NotFoundException(`Cannot find the order with id ${id}`);
         }
+
         const orderAggregate = await this.orderRepository.getById(id);
         if (!orderAggregate) {
             throw new common_1.NotFoundException('Order not found');
@@ -162,6 +167,7 @@ let OrderService = class OrderService {
         orderAggregate.update(userId, userEmail, orderItems, totalAmount);
         for (const event of orderAggregate.uncommittedEvents) {
             await this.orderProjection.handleEvent(event);
+
         }
         await this.orderRepository.save(orderAggregate);
         const orderState = orderAggregate.state;
