@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpS
 import { OrderService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { constrainedMemory } from 'process';
 
 @Controller('orders')
 export class OrderController {
@@ -10,9 +11,11 @@ export class OrderController {
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto) {
     try {
-      return await this.orderService.create(createOrderDto);
+      const result = await this.orderService.create(createOrderDto);
+      console.log('[Order Service] Create order successful for:', createOrderDto.userId);
+      return result;
     } catch (error) {
-      console.error('Error in create order controller:', error);
+      console.error('[Order Service] Error in create order controller:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -26,9 +29,11 @@ export class OrderController {
   @Get()
   async findAll() {
     try {
-      return await this.orderService.findAll();
+      const result = await this.orderService.findAll();
+      console.log('[Order Service] Find all orders successful');
+      return result;
     } catch (error) {
-      console.error('Error in findAll orders:', error);
+      console.error('[Order Service] Error in findAll orders:', error);
       throw new HttpException(
         'Error fetching orders',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -39,9 +44,11 @@ export class OrderController {
   @Get('user/:userId')
   async findByUserId(@Param('userId') userId: string) {
     try {
-      return await this.orderService.findByUserId(userId);
+      const result = await this.orderService.findByUserId(userId);
+      console.log('[Order Service] Find orders successful for userId :', userId);
+      return result
     } catch (error) {
-      console.error('Error in findByUserId:', error);
+      console.error('[Order Service] Error in findByUserId:', error);
       throw new HttpException(
         'Error fetching user orders',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -52,9 +59,11 @@ export class OrderController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
-      return await this.orderService.findOne(id);
+      const result = await this.orderService.findOne(id);
+      console.log('[Order Service] Find order successful for id:', id);
+      return result;
     } catch (error) {
-      console.error('Error in findOne order:', error);
+      console.error('[Order Service] Error in findOne order:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -68,9 +77,11 @@ export class OrderController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
     try {
-      return await this.orderService.update(id, updateOrderDto);
+      const result = await this.orderService.update(id, updateOrderDto);
+      console.log('[Order Service] Update order successful for id:', id);
+      return result;
     } catch (error) {
-      console.error('Error in update order:', error);
+      console.error('[Order Service] Error in update order:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -84,9 +95,11 @@ export class OrderController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      return await this.orderService.remove(id);
+      const result = await this.orderService.remove(id);
+      console.log('[Order Service] Remove order successful for id:', id);
+      return result;
     } catch (error) {
-      console.error('Error in remove order:', error);
+      console.error('[Order Service] Error in remove order:', error);
       if (error instanceof HttpException) {
         throw error;
       }

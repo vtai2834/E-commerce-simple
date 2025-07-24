@@ -135,7 +135,6 @@ app.patch('/products/:id', createProxyMiddleware({
     console.error('[API Gateway] Proxy error:', err);
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
   }
-  
 }));
 
 app.delete('/products/:id', createProxyMiddleware({ 

@@ -22,6 +22,7 @@ export declare const OrderProductInfoSchema: import("mongoose").Schema<OrderProd
     _id: import("mongoose").Types.ObjectId;
 }>;
 export declare class Order {
+    _id: string;
     userId: string;
     userEmail: string;
     items: Array<{
@@ -35,8 +36,8 @@ export declare class Order {
     userInfo?: OrderUserInfo;
     productsInfo?: OrderProductInfo[];
 }
-export declare const OrderSchema: import("mongoose").Schema<Order, import("mongoose").Model<Order, any, any, any, Document<unknown, any, Order> & Order & {
-    _id: import("mongoose").Types.ObjectId;
-}, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Order, Document<unknown, {}, import("mongoose").FlatRecord<Order>> & import("mongoose").FlatRecord<Order> & {
-    _id: import("mongoose").Types.ObjectId;
-}>;
+export declare const OrderSchema: import("mongoose").Schema<Order, import("mongoose").Model<Order, any, any, any, Document<unknown, any, Order> & Order & Required<{
+    _id: string;
+}>, any>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Order, Document<unknown, {}, import("mongoose").FlatRecord<Order>> & import("mongoose").FlatRecord<Order> & Required<{
+    _id: string;
+}>>;

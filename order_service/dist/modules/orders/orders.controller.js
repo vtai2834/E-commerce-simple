@@ -23,10 +23,12 @@ let OrderController = class OrderController {
     }
     async create(createOrderDto) {
         try {
-            return await this.orderService.create(createOrderDto);
+            const result = await this.orderService.create(createOrderDto);
+            console.log('[Order Service] Create order successful for:', createOrderDto.userId);
+            return result;
         }
         catch (error) {
-            console.error('Error in create order controller:', error);
+            console.error('[Order Service] Error in create order controller:', error);
             if (error instanceof common_1.HttpException) {
                 throw error;
             }
@@ -35,28 +37,34 @@ let OrderController = class OrderController {
     }
     async findAll() {
         try {
-            return await this.orderService.findAll();
+            const result = await this.orderService.findAll();
+            console.log('[Order Service] Find all orders successful');
+            return result;
         }
         catch (error) {
-            console.error('Error in findAll orders:', error);
+            console.error('[Order Service] Error in findAll orders:', error);
             throw new common_1.HttpException('Error fetching orders', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     async findByUserId(userId) {
         try {
-            return await this.orderService.findByUserId(userId);
+            const result = await this.orderService.findByUserId(userId);
+            console.log('[Order Service] Find orders successful for userId :', userId);
+            return result;
         }
         catch (error) {
-            console.error('Error in findByUserId:', error);
+            console.error('[Order Service] Error in findByUserId:', error);
             throw new common_1.HttpException('Error fetching user orders', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     async findOne(id) {
         try {
-            return await this.orderService.findOne(id);
+            const result = await this.orderService.findOne(id);
+            console.log('[Order Service] Find order successful for id:', id);
+            return result;
         }
         catch (error) {
-            console.error('Error in findOne order:', error);
+            console.error('[Order Service] Error in findOne order:', error);
             if (error instanceof common_1.HttpException) {
                 throw error;
             }
@@ -65,10 +73,12 @@ let OrderController = class OrderController {
     }
     async update(id, updateOrderDto) {
         try {
-            return await this.orderService.update(id, updateOrderDto);
+            const result = await this.orderService.update(id, updateOrderDto);
+            console.log('[Order Service] Update order successful for id:', id);
+            return result;
         }
         catch (error) {
-            console.error('Error in update order:', error);
+            console.error('[Order Service] Error in update order:', error);
             if (error instanceof common_1.HttpException) {
                 throw error;
             }
@@ -77,10 +87,12 @@ let OrderController = class OrderController {
     }
     async remove(id) {
         try {
-            return await this.orderService.remove(id);
+            const result = await this.orderService.remove(id);
+            console.log('[Order Service] Remove order successful for id:', id);
+            return result;
         }
         catch (error) {
-            console.error('Error in remove order:', error);
+            console.error('[Order Service] Error in remove order:', error);
             if (error instanceof common_1.HttpException) {
                 throw error;
             }
