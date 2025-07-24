@@ -114,12 +114,53 @@ app.post('/products', createProxyMiddleware({
 
 app.patch('/products/:id', createProxyMiddleware({ 
   target: PRODUCT_SERVICE_URL,
-  changeOrigin: true 
+  changeOrigin: true,
+  timeout: 5000, // 5 seconds timeout
+  proxyTimeout: 5000,
+  onProxyReq: (proxyReq, req, res) => {
+    console.log('[API Gateway] Forwarding login request to User Service');
+    console.log('[API Gateway] Request body:', req.body);
+    if (req.body) {
+      const bodyData = JSON.stringify(req.body);
+      console.log('[API Gateway] Stringified body:', bodyData);
+      proxyReq.setHeader('Content-Type', 'application/json');
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+      proxyReq.write(bodyData);
+    }
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[API Gateway] Received response from User Service: ${proxyRes.statusCode}`);
+  },
+  onError: (err, req, res) => {
+    console.error('[API Gateway] Proxy error:', err);
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+  
 }));
 
 app.delete('/products/:id', createProxyMiddleware({ 
   target: PRODUCT_SERVICE_URL,
-  changeOrigin: true 
+  changeOrigin: true,
+  timeout: 5000, // 5 seconds timeout
+  proxyTimeout: 5000,
+  onProxyReq: (proxyReq, req, res) => {
+    console.log('[API Gateway] Forwarding login request to User Service');
+    console.log('[API Gateway] Request body:', req.body);
+    if (req.body) {
+      const bodyData = JSON.stringify(req.body);
+      console.log('[API Gateway] Stringified body:', bodyData);
+      proxyReq.setHeader('Content-Type', 'application/json');
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+      proxyReq.write(bodyData);
+    }
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[API Gateway] Received response from User Service: ${proxyRes.statusCode}`);
+  },
+  onError: (err, req, res) => {
+    console.error('[API Gateway] Proxy error:', err);
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
 }));
 
 // Order endpoints

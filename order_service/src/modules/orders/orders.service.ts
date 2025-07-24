@@ -40,7 +40,10 @@ export class OrderService {
       // Verify user exists
       const userResponse = await retryOperation(async () => {
         console.log('Verifying user existence...');
-        const response = await axiosWithTimeout.get(`${process.env.USER_SERVICE_URL}/users/email/${createOrderDto.userEmail}`);
+
+        const host = process.env.USER_SERVICE_URL || 'http://localhost:8080';
+
+        const response = await axiosWithTimeout.get(`${host}/users/email/${createOrderDto.userEmail}`);
         console.log('User verification response:', response.status);
         return response;
       });
@@ -55,7 +58,10 @@ export class OrderService {
         createOrderDto.items.map(async (item) => {
           const productResponse = await retryOperation(async () => {
             console.log('Checking product:', item.productId);
-            return await axiosWithTimeout.get(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`);
+
+            const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+
+            return await axiosWithTimeout.get(`${host}/products/${item.productId}`);
           });
 
           if (!productResponse.data) {
@@ -101,7 +107,10 @@ export class OrderService {
           const newStock = item.currentStock - item.quantity;
           await retryOperation(async () => {
             console.log('Updating stock for product:', item.productId);
-            return await axiosWithTimeout.patch(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`, {
+
+            const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+
+            return await axiosWithTimeout.patch(`${host}/products/${item.productId}`, {
               stock: newStock
             } as UpdateProductDto);
           });
@@ -142,7 +151,9 @@ export class OrderService {
       // Recalculate total if items are updated
       const items = await Promise.all(
         updateOrderDto.items.map(async (item) => {
-          const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}/products/${item.productId}`);
+          const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+
+          const productResponse = await axios.get(`${host}/products/${item.productId}`);
           if (!productResponse.data) {
             throw new NotFoundException(`Product ${item.productId} not found`);
           }
