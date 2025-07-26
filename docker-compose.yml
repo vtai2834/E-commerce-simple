@@ -10,85 +10,85 @@ services:
     networks:
       - microservices-network
 
-  api-gateway:
-    build:
-      context: ./BE/api-gateway
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - USER_SERVICE_URL=http://user-service:8080
-      - PRODUCT_SERVICE_URL=http://product-service:8081
-      - ORDER_SERVICE_URL=http://order-service:8082
-    depends_on:
-      - user-service
-      - product-service
-      - order-service
-    networks:
-      - microservices-network
+  # api-gateway:
+  #   build:
+  #     context: ./BE/api-gateway
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - USER_SERVICE_URL=http://user-service:8080
+  #     - PRODUCT_SERVICE_URL=http://product-service:8081
+  #     - ORDER_SERVICE_URL=http://order-service:8082
+  #   depends_on:
+  #     - user-service
+  #     - product-service
+  #     - order-service
+  #   networks:
+  #     - microservices-network
 
-  user-service:
-    build:
-      context: ./user_service
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/user_db
-      - JWT_SECRET=your_jwt_secret
-      - JWT_EXPIRES_IN=24h
-    depends_on:
-      - mongodb
-    networks:
-      - microservices-network
+  # user-service:
+  #   build:
+  #     context: ./user_service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - MONGODB_URI=mongodb://mongodb:27017/user_db
+  #     - JWT_SECRET=your_jwt_secret
+  #     - JWT_EXPIRES_IN=24h
+  #   depends_on:
+  #     - mongodb
+  #   networks:
+  #     - microservices-network
 
-  product-service:
-    build:
-      context: ./product_service
-      dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/product_db
-    depends_on:
-      - mongodb
-    networks:
-      - microservices-network
+  # product-service:
+  #   build:
+  #     context: ./product_service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     - MONGODB_URI=mongodb://mongodb:27017/product_db
+  #   depends_on:
+  #     - mongodb
+  #   networks:
+  #     - microservices-network
 
-  order-service:
-    build:
-      context: ./order_service
-      dockerfile: Dockerfile
-    ports:
-      - "8082:8082"
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/order_db
-      - USER_SERVICE_URL=http://user-service:8080
-      - PRODUCT_SERVICE_URL=http://product-service:8081
-    depends_on:
-      - mongodb
-      - user-service
-      - product-service
-    networks:
-      - microservices-network
+  # order-service:
+  #   build:
+  #     context: ./order_service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     - MONGODB_URI=mongodb://mongodb:27017/order_db
+  #     - USER_SERVICE_URL=http://user-service:8080
+  #     - PRODUCT_SERVICE_URL=http://product-service:8081
+  #   depends_on:
+  #     - mongodb
+  #     - user-service
+  #     - product-service
+  #   networks:
+  #     - microservices-network
 
-  frontend:
-    build:
-      context: ./FE
-      dockerfile: Dockerfile
-    container_name: frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-    depends_on:
-      - user-service
-      - product-service
-      - order-service
-    networks:
-      - microservices-network
-    restart: unless-stopped
+  # frontend:
+  #   build:
+  #     context: ./FE
+  #     dockerfile: Dockerfile
+  #   container_name: frontend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3000
+  #   depends_on:
+  #     - user-service
+  #     - product-service
+  #     - order-service
+  #   networks:
+  #     - microservices-network
+  #   restart: unless-stopped
 
 networks:
   microservices-network:

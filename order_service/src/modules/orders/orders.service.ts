@@ -47,14 +47,10 @@ export class OrderService {
 
       // Verify user exists
       const userResponse = await retryOperation(async () => {
-
-        console.log('Verifying user existence...');
-
+        console.log('[Order Service] Verifying user existence...'); 
         const host = process.env.USER_SERVICE_URL || 'http://localhost:8080';
-
         const response = await axiosWithTimeout.get(`${host}/users/email/${createOrderDto.userEmail}`);
-        console.log('User verification response:', response.status);
-
+        console.log('[Order Service] User verification response:', response.status);
         return response;
       });
 
@@ -67,12 +63,8 @@ export class OrderService {
       const checkedItems = await Promise.all(
         orderItems.map(async (item) => {
           const productResponse = await retryOperation(async () => {
-
-            console.log('Checking product:', item.productId);
-
-            const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
-
-
+            console.log('[Order Service] Checking product:', item.productId);
+            const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';  
             return await axiosWithTimeout.get(`${host}/products/${item.productId}`);
           });
 
@@ -80,7 +72,7 @@ export class OrderService {
             throw new NotFoundException(`Product ${item.productId} not found`);
           }
           const product = productResponse.data;
-          
+
           // Check if there's enough stock
           if (product.stock < item.quantity) {
             throw new BadRequestException(`Not enough stock for product ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
@@ -132,12 +124,8 @@ export class OrderService {
           const newStock = item.currentStock - item.quantity;
           await retryOperation(async () => {
             console.log('Updating stock for product:', item.productId);
-
-
-            const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
-
-            return await axiosWithTimeout.patch(`${host}/products/${item.productId}`, {
-
+              const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+              return await axiosWithTimeout.patch(`${host}/products/${item.productId}`, {
               stock: newStock
             } as UpdateProductDto);
           });
@@ -177,27 +165,24 @@ export class OrderService {
       throw new NotFoundException(`Cannot find the order with id ${id}`);
     }
 
+    // Get order aggregate
+    const orderAggregate = await this.orderRepository.getById(id);
+    if (!orderAggregate) {
+      throw new NotFoundException('Order not found');
+    }
 
-    if (updateOrderDto.items) {
-      // Recalculate total if items are updated
-      const items = await Promise.all(
-        updateOrderDto.items.map(async (item) => {
+    // Recalculate total if items are updated
+    const checkedItems = await Promise.all(
+      orderItems.map(async (item) => {
+        const productResponse = await retryOperation(async () => {
           const host = process.env.PRODUCT_SERVICE_URL || 'http://localhost:8081';
+          return await axiosWithTimeout.get(`${host}/products/${item.productId}`);
+        });
 
-          const productResponse = await axios.get(`${host}/products/${item.productId}`);
-          if (!productResponse.data) {
-            throw new NotFoundException(`Product ${item.productId} not found`);
-          }
-          const product = productResponse.data;
-          return {
-            productId: item.productId,
-            quantity: item.quantity,
-            price: product.price,
-            name: product.name
-          };
-        })
-      );
-
+        if (!productResponse.data) {
+          throw new NotFoundException(`Product ${item.productId} not found`);
+        }
+        const product = productResponse.data;
 
         // Check if there's enough stock
         if (product.stock < item.quantity) {
