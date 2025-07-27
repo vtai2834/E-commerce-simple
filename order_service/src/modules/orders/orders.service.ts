@@ -133,7 +133,13 @@ export class OrderService {
       );
       console.log('[Order Service] All product stocks updated successfully');
 
-      return savedOrder;
+      // Trả về kết quả thành công và orderId
+      const orderState = orderAggregate.state;
+      return {
+        success: true,
+        message: 'Order created successfully',
+        orderId: orderState.id,
+      };
     } catch (error) {
       console.error('[Order Service] Error in order creation:', error);
       throw error;
@@ -285,5 +291,14 @@ export class OrderService {
     await this.orderRepository.save(orderAggregate);
 
     return { message: 'Order deleted successfully' };
+  }
+
+  async getOrderEvents(orderId: string) {
+    const events = await this.orderRepository.getEventsByOrderId(orderId);
+    // Đảm bảo luôn trả về mảng, không throw lỗi
+    if (!events || events.length === 0) {
+      throw new NotFoundException('Order not found');
+    }
+    return events || [];
   }
 } 

@@ -216,6 +216,11 @@ app.delete('/orders/:id', createProxyMiddleware({
   changeOrigin: true 
 }));
 
+app.get('/orders/events/:orderId', createProxyMiddleware({ 
+  target: ORDER_SERVICE_URL,
+  changeOrigin: true 
+}));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'API Gateway is running' });

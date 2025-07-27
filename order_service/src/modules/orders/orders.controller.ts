@@ -56,6 +56,11 @@ export class OrderController {
     }
   }
 
+  @Get('events/:orderId')
+  async getOrderEvents(@Param('orderId') orderId: string) {
+    return this.orderService.getOrderEvents(orderId);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {

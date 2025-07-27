@@ -50,4 +50,9 @@ export class OrderEventRepository {
         // Rebuild aggregates for each order
         return Promise.all(userOrders.map(event => this.getById(event.orderId)));
     }
+
+    async getEventsByOrderId(orderId: string) {
+        console.log('getEventsByOrderId', orderId);
+        return this.eventStore.getEvents(orderId);
+    }
 }
